@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Review - {{ announcement.person_name }} - People on the Move{% endblock %}
+
+{% block content %}
+<div class="review-page">
+    <div class="back-link">
+        <a href="{{ url_for('main.index') }}">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="review-grid">
+        <!-- Announcement Details -->
+        <div class="panel announcement-details">
+            <h2>Announcement Details</h2>
+
+            <div class="detail-row">
+                <label>Person:</label>
+                <input type="text" id="person_name" value="{{ announcement.person_name or '' }}"
+                       onchange="updateField('person_name', this.value)">
+            </div>
+
+            <div class="detail-row">
+                <label>Company:</label>
+                <span class="readonly">{{ announcement.company.name }}</span>
+            </div>
+
+            <div class="detail-row">
+                <label>New Title:</label>
+                <input type="text" id="new_title" value="{{ announcement.new_title or '' }}"
+                       onchange="updateField('new_title', this.value)">
+            </div>
+
+            <div class="detail-row">
+                <label>Previous Title:</label>
+                <input type="text" id="previous_title" value="{{ announcement.previous_title or '' }}"
+                       onchange="updateField('previous_title', this.value)">
+            </div>
+
+            <div class="detail-row">
+                <label>Date:</label>
+                <span>{{ announcement.announcement_date or 'Not specified' }}</span>
+            </div>
+
+            <div class="detail-row">
+                <label>Source:</label>
+                {% if announcement.source_url %}
+                <a href="{{ announcement.source_url }}" target="_blank">{{ announcement.source_name }}</a>
+                {% else %}
+                <span>{{ announcement.source_name or 'Unknown' }}</span>
+                {% endif %}
+            </div>
+
+            <div class="detail-row">
+                <label>Status:</label>
+                <span class="status-badge status-{{ announcement.status }}">{{ announcement.status }}</span>
+            </div>
+
+            {% if announcement.raw_text %}
+            <div class="detail-row full-width">
+                <label>Original Text:</label>
+                <div class="raw-text">{{ announcement.raw_text[:500] }}{% if announcement.raw_text|length > 500 %}...{% endif %}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Post Editor -->
+        <div class="panel post-editor">
+            <div class="panel-header">
+                <h2>LinkedIn Post</h2>
+                <span class="version">Version {{ post.version }}</span>
+            </div>
+
+            <textarea id="post_content" rows="12">{{ post.content }}</textarea>
+
+            <div class="char-count">
+                <span id="char-count">{{ post.content|length }}</span> / 3000 characters
+            </div>
+
+            <div class="editor-actions">
+                <button class="btn btn-secondary" onclick="regeneratePost()">
+                    Regenerate with AI
+                </button>
+                <button class="btn btn-secondary" onclick="savePost()">
+                    Save Changes
+                </button>
+                <button class="btn btn-primary" onclick="copyPost()">
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="review-actions">
+        {% if announcement.status == 'pending' %}
+        <button class="btn btn-success btn-large" onclick="approveAnnouncement()">
+            Approve & Copy Post
+        </button>
+        <button class="btn btn-danger btn-large" onclick="rejectAnnouncement()">
+            Reject
+        </button>
+        {% elif announcement.status == 'approved' %}
+        <button class="btn btn-success btn-large" onclick="markAsPosted()">
+            Mark as Posted to LinkedIn
+        </button>
+        <button class="btn btn-primary btn-large" onclick="copyPost()">
+            Copy Post
+        </button>
+        {% elif announcement.status == 'posted' %}
+        <span class="posted-info">
+            Posted on {{ post.posted_at.strftime('%Y-%m-%d %H:%M') if post.posted_at else 'Unknown' }}
+            {% if post.linkedin_url %}
+            - <a href="{{ post.linkedin_url }}" target="_blank">View on LinkedIn</a>
+            {% endif %}
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const announcementId = {{ announcement.id }};
+    const postId = {{ post.id }};
+
+    // Update character count on typing
+    document.getElementById('post_content').addEventListener('input', function() {
+        document.getElementById('char-count').textContent = this.value.length;
+    });
+
+    async function updateField(field, value) {
+        const data = {};
+        data[field] = value;
+        const result = await apiCall(`/api/announcement/${announcementId}`, 'PUT', data);
+        if (result.success) {
+            showNotification('Updated!');
+        } else {
+            showNotification('Error updating field', 'error');
+        }
+    }
+
+    async function savePost() {
+        const content = document.getElementById('post_content').value;
+        const result = await apiCall(`/api/post/${postId}/update`, 'POST', { content });
+        if (result.success) {
+            showNotification('Post saved!');
+            document.querySelector('.version').textContent = 'Version ' + result.version;
+        } else {
+            showNotification('Error saving post', 'error');
+        }
+    }
+
+    async function regeneratePost() {
+        if (!confirm('Regenerate post with AI? This will replace current content.')) return;
+
+        const result = await apiCall(`/api/post/${postId}/regenerate`, 'POST');
+        if (result.success) {
+            document.getElementById('post_content').value = result.content;
+            document.getElementById('char-count').textContent = result.content.length;
+            document.querySelector('.version').textContent = 'Version ' + result.version;
+            showNotification('Post regenerated!');
+        } else {
+            showNotification('Error regenerating post', 'error');
+        }
+    }
+
+    function copyPost() {
+        const content = document.getElementById('post_content').value;
+        copyToClipboard(content);
+    }
+
+    async function approveAnnouncement() {
+        // Save any pending changes first
+        await savePost();
+
+        const result = await apiCall(`/api/announcement/${announcementId}/approve`, 'POST', {
+            approved_by: 'editor'
+        });
+        if (result.success) {
+            copyPost();
+            showNotification('Approved and copied!');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error approving', 'error');
+        }
+    }
+
+    async function rejectAnnouncement() {
+        if (!confirm('Are you sure you want to reject this announcement?')) return;
+
+        const result = await apiCall(`/api/announcement/${announcementId}/reject`, 'POST');
+        if (result.success) {
+            showNotification('Rejected');
+            setTimeout(() => window.location.href = '/', 1000);
+        } else {
+            showNotification('Error rejecting', 'error');
+        }
+    }
+
+    async function markAsPosted() {
+        const linkedinUrl = prompt('Enter LinkedIn post URL (optional):');
+
+        const result = await apiCall(`/api/announcement/${announcementId}/posted`, 'POST', {
+            linkedin_url: linkedinUrl
+        });
+        if (result.success) {
+            showNotification('Marked as posted!');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error', 'error');
+        }
+    }
+</script>
+{% endblock %}

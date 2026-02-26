@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}History - People on the Move{% endblock %}
+
+{% block content %}
+<div class="history-page">
+    <h1>History</h1>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('posted')">Posted ({{ posted|length }})</button>
+        <button class="tab" onclick="showTab('rejected')">Rejected ({{ rejected|length }})</button>
+    </div>
+
+    <!-- Posted Tab -->
+    <div id="posted-tab" class="tab-content active">
+        {% if posted %}
+        <div class="announcement-list">
+            {% for announcement in posted %}
+            <div class="announcement-card posted">
+                <div class="announcement-header">
+                    <span class="person-name">{{ announcement.person_name }}</span>
+                    <span class="company-name">{{ announcement.company.name }}</span>
+                </div>
+                <div class="announcement-title">{{ announcement.new_title }}</div>
+                <div class="announcement-meta">
+                    {% if announcement.posts %}
+                        {% set post = announcement.posts[0] %}
+                        <span>Posted: {{ post.posted_at.strftime('%Y-%m-%d') if post.posted_at else 'Unknown' }}</span>
+                        {% if post.linkedin_url %}
+                        <a href="{{ post.linkedin_url }}" target="_blank" class="btn btn-link">View on LinkedIn</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">No posts yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Rejected Tab -->
+    <div id="rejected-tab" class="tab-content">
+        {% if rejected %}
+        <div class="announcement-list">
+            {% for announcement in rejected %}
+            <div class="announcement-card rejected">
+                <div class="announcement-header">
+                    <span class="person-name">{{ announcement.person_name or 'Unknown' }}</span>
+                    <span class="company-name">{{ announcement.company.name }}</span>
+                </div>
+                <div class="announcement-title">{{ announcement.new_title or 'No title' }}</div>
+                <div class="announcement-meta">
+                    <span>Rejected: {{ announcement.updated_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">No rejected announcements.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

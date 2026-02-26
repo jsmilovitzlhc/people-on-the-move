@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - People on the Move{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.pending_announcements }}</div>
+            <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.approved_announcements }}</div>
+            <div class="stat-label">Ready to Post</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.posted_announcements }}</div>
+            <div class="stat-label">Posted</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.active_companies }}</div>
+            <div class="stat-label">Companies Tracked</div>
+        </div>
+    </div>
+
+    <!-- Pending Announcements -->
+    <section class="section">
+        <h2>Pending Review</h2>
+        {% if pending %}
+        <div class="announcement-list">
+            {% for announcement in pending %}
+            <div class="announcement-card" data-id="{{ announcement.id }}">
+                <div class="announcement-header">
+                    <span class="person-name">{{ announcement.person_name or 'Unknown' }}</span>
+                    <span class="company-name">{{ announcement.company.name }}</span>
+                </div>
+                <div class="announcement-title">
+                    {{ announcement.new_title or 'Position not specified' }}
+                </div>
+                <div class="announcement-meta">
+                    <span class="source">{{ announcement.source_name }}</span>
+                    <span class="date">{{ announcement.announcement_date or announcement.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <div class="announcement-actions">
+                    <a href="{{ url_for('main.review', announcement_id=announcement.id) }}" class="btn btn-primary">Review</a>
+                    <button class="btn btn-success btn-quick-approve" onclick="quickApprove({{ announcement.id }})">Quick Approve</button>
+                    <button class="btn btn-danger btn-reject" onclick="quickReject({{ announcement.id }})">Reject</button>
+                    {% if announcement.source_url %}
+                    <a href="{{ announcement.source_url }}" target="_blank" class="btn btn-link">Source</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">No pending announcements. Run the aggregator to fetch new announcements.</p>
+        {% endif %}
+    </section>
+
+    <!-- Ready to Post -->
+    <section class="section">
+        <h2>Ready to Post</h2>
+        {% if approved %}
+        <div class="announcement-list">
+            {% for announcement in approved %}
+            <div class="announcement-card approved" data-id="{{ announcement.id }}">
+                <div class="announcement-header">
+                    <span class="person-name">{{ announcement.person_name }}</span>
+                    <span class="company-name">{{ announcement.company.name }}</span>
+                </div>
+                <div class="announcement-title">{{ announcement.new_title }}</div>
+                <div class="announcement-actions">
+                    <a href="{{ url_for('main.review', announcement_id=announcement.id) }}" class="btn btn-primary">View Post</a>
+                    <button class="btn btn-success" onclick="markPosted({{ announcement.id }})">Mark as Posted</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-state">No approved announcements ready to post.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function quickApprove(announcementId) {
+        const result = await apiCall(`/api/announcement/${announcementId}/approve`, 'POST');
+        if (result.success) {
+            showNotification('Announcement approved!');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error: ' + result.error, 'error');
+        }
+    }
+
+    async function quickReject(announcementId) {
+        if (!confirm('Are you sure you want to reject this announcement?')) return;
+
+        const result = await apiCall(`/api/announcement/${announcementId}/reject`, 'POST');
+        if (result.success) {
+            showNotification('Announcement rejected');
+            document.querySelector(`.announcement-card[data-id="${announcementId}"]`).remove();
+        } else {
+            showNotification('Error: ' + result.error, 'error');
+        }
+    }
+
+    async function markPosted(announcementId) {
+        const linkedinUrl = prompt('Enter LinkedIn post URL (optional):');
+
+        const result = await apiCall(`/api/announcement/${announcementId}/posted`, 'POST', {
+            linkedin_url: linkedinUrl
+        });
+        if (result.success) {
+            showNotification('Marked as posted!');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error: ' + result.error, 'error');
+        }
+    }
+</script>
+{% endblock %}

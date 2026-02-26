@@ -1,0 +1,95 @@
+{
+  "companies": [
+    {
+      "name": "Tyson Foods",
+      "domain": "tyson.com",
+      "website": "https://www.tysonfoods.com",
+      "aliases": ["Tyson", "Tyson Foods Inc"]
+    },
+    {
+      "name": "Cargill",
+      "domain": "cargill.com",
+      "website": "https://www.cargill.com",
+      "aliases": ["Cargill Inc", "Cargill Meat Solutions"]
+    },
+    {
+      "name": "JBS USA",
+      "domain": "jbssa.com",
+      "website": "https://jbssa.com",
+      "aliases": ["JBS", "JBS Foods", "JBS USA Holdings"]
+    },
+    {
+      "name": "Smithfield Foods",
+      "domain": "smithfieldfoods.com",
+      "website": "https://www.smithfieldfoods.com",
+      "aliases": ["Smithfield", "Smithfield Packing"]
+    },
+    {
+      "name": "Hormel Foods",
+      "domain": "hormelfoods.com",
+      "website": "https://www.hormelfoods.com",
+      "aliases": ["Hormel", "Hormel Foods Corporation"]
+    },
+    {
+      "name": "Pilgrim's Pride",
+      "domain": "pilgrims.com",
+      "website": "https://www.pilgrims.com",
+      "aliases": ["Pilgrims", "Pilgrim's Pride Corporation"]
+    },
+    {
+      "name": "Perdue Farms",
+      "domain": "perdue.com",
+      "website": "https://www.perdue.com",
+      "aliases": ["Perdue", "Perdue Foods"]
+    },
+    {
+      "name": "Sanderson Farms",
+      "domain": "sandersonfarms.com",
+      "website": "https://www.sandersonfarms.com",
+      "aliases": ["Sanderson"]
+    },
+    {
+      "name": "Foster Farms",
+      "domain": "fosterfarms.com",
+      "website": "https://www.fosterfarms.com",
+      "aliases": ["Foster"]
+    },
+    {
+      "name": "Wayne-Sanderson Farms",
+      "domain": "waynesandersonfarms.com",
+      "website": "https://www.waynesandersonfarms.com",
+      "aliases": ["Wayne Sanderson", "Wayne Farms"]
+    },
+    {
+      "name": "National Beef",
+      "domain": "nationalbeef.com",
+      "website": "https://www.nationalbeef.com",
+      "aliases": ["National Beef Packing"]
+    },
+    {
+      "name": "OSI Group",
+      "domain": "osigroup.com",
+      "website": "https://www.osigroup.com",
+      "aliases": ["OSI", "OSI Industries"]
+    },
+    {
+      "name": "Koch Foods",
+      "domain": "kochfoods.com",
+      "website": "https://www.kochfoods.com",
+      "aliases": ["Koch"]
+    },
+    {
+      "name": "Mountaire Farms",
+      "domain": "mountaire.com",
+      "website": "https://www.mountaire.com",
+      "aliases": ["Mountaire"]
+    },
+    {
+      "name": "Seaboard Foods",
+      "domain": "seaboardfoods.com",
+      "website": "https://www.seaboardfoods.com",
+      "aliases": ["Seaboard"]
+    }
+  ],
+  "_comment": "This is a starter list. Import your full company list using scripts/import_companies.py"
+}

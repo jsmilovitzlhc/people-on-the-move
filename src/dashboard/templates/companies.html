@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Companies - People on the Move{% endblock %}
+
+{% block content %}
+<div class="companies-page">
+    <h1>Tracked Companies</h1>
+
+    <p class="page-description">
+        These companies are monitored for executive job changes.
+        To add more companies, edit <code>config/companies.json</code> or run <code>scripts/import_companies.py</code>.
+    </p>
+
+    <div class="companies-grid">
+        {% for company in companies %}
+        <div class="company-card {% if not company.is_active %}inactive{% endif %}">
+            <div class="company-name">{{ company.name }}</div>
+            {% if company.website %}
+            <a href="{{ company.website }}" target="_blank" class="company-website">{{ company.domain }}</a>
+            {% else %}
+            <span class="company-domain">{{ company.domain }}</span>
+            {% endif %}
+            <div class="company-status">
+                {% if company.is_active %}
+                <span class="badge badge-active">Active</span>
+                {% else %}
+                <span class="badge badge-inactive">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="company-stats">
+        <p>Total: {{ companies|length }} companies ({{ companies|selectattr('is_active')|list|length }} active)</p>
+    </div>
+</div>
+{% endblock %}
